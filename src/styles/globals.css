@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    
+    --primary: 199 89% 48%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --ring: 215 20.2% 65.1%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 84% 9.9%;
+    --card-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    
+    --primary: 199 89% 48%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    
+    --ring: 217.2 32.6% 17.5%;
+  }
+  
+  /* Importante: garantir que o fundo seja aplicado */
+  body {
+    @apply bg-background text-foreground;
+  }
+} 
+
+/* Estilos específicos para garantir contraste no modo escuro */
+.dark .heading-text {
+  @apply text-white;
+}
+
+.dark .nav-item {
+  @apply text-slate-200;
+}
+
+.dark .icon {
+  @apply text-slate-200;
+}
+
+.dark .btn-text {
+  @apply text-white;
+}
+
+/* Estilos específicos para os cards de projeto no modo escuro */
+.dark .project-card {
+  background-color: rgba(20, 30, 50, 0.7);
+  border: 1px solid rgba(78, 93, 120, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.dark .project-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+.dark .visualizar-btn {
+  background-color: rgba(30, 144, 196, 0.8);
+  color: white;
+}
+
+.dark .visualizar-btn:hover {
+  background-color: rgba(30, 144, 196, 1);
+}
+
+.dark .nav-tabs {
+  border-bottom: 1px solid rgba(78, 93, 120, 0.4);
+}
+
+.dark .nav-item.active {
+  border-bottom: 2px solid var(--primary);
+  color: var(--primary-foreground);
+}
+
+.dark .access-tag {
+  background-color: rgba(30, 144, 196, 0.2);
+  border: 1px solid rgba(30, 144, 196, 0.5);
+  color: rgb(77, 185, 235);
+} 

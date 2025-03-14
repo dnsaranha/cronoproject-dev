@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CronoProject - Gerenciamento de Cronogramas</title>
+    <meta name="description" content="Solução completa para gerenciamento de projetos com cronogramas, WBS e gráficos de Gantt" />
+    <meta name="author" content="Denis Aranha" />
+    <meta property="og:image" content="/og-image.png" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary-color: #3F51B5;
+        --primary-hover: #303F9F;
+        --secondary-color: #FF5722;
+        --dark-color: #1F2937;
+        --light-color: #F9FAFB;
+        --gray-color: #9CA3AF;
+        --border-color: #E5E7EB;
+        --success-color: #10B981;
+        --danger-color: #EF4444;
+        --background-light: #F3F4F6;
+        --background-dark: #111827;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+        color: var(--dark-color);
+        background-color: var(--light-color);
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      ul {
+        list-style: none;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: a0 20px;
+      }
+
+      /* Navbar */
+      .navbar {
+        background-color: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 15px 0;
+      }
+
+      .navbar .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-color);
+      }
+
+      .logo-img {
+        height: 36px;
+        margin-right: 10px;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .nav-links a {
+        font-weight: 500;
+        transition: color 0.3s;
+      }
+
+      .nav-links a:hover {
+        color: var(--primary-color);
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+      }
+
+      .hamburger span {
+        width: 25px;
+        height: 3px;
+        background-color: var(--dark-color);
+        transition: 0.3s;
+      }
+
+      /* Botões */
+      .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: 500;
+        transition: all 0.3s;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .btn-outline {
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        background-color: transparent;
+      }
+
+      .btn-outline:hover {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-lg {
+        padding: 12px 24px;
+        font-size: 18px;
+      }
+
+      /* Hero */
+      .hero {
+        padding: 80px 0;
+        background-color: white;
+      }
+
+      .hero .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+      }
+
+      .hero-content {
+        flex: 1;
+      }
+
+      .hero-image {
+        flex: 1;
+      }
+
+      .hero h1 {
+        font-size: 48px;
+        line-height: 1.2;
+        margin-bottom: 20px;
+      }
+
+      .hero p {
+        font-size: 18px;
+        margin-bottom: 30px;
+        color: var(--gray-color);
+      }
+
+      .hero-buttons {
+        display: flex;
+        gap: 15px;
+      }
+
+      .hero-image img {
+        max-width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Exemplos */
+      .examples {
+        padding: 80px 0;
+        background-color: var(--background-light);
+      }
+
+      .section-title {
+        font-size: 36px;
+        text-align: center;
+        margin-bottom: 15px;
+      }
+
+      .section-subtitle {
+        font-size: 18px;
+        text-align: center;
+        color: var(--gray-color);
+        margin-bottom: 50px;
+      }
+
+      .examples-slider {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .slider-container {
+        display: flex;
+        overflow: hidden;
+        margin-bottom: 30px;
+      }
+
+      .slider-item {
+        min-width: 100%;
+        padding: 0 20px;
+      }
+
+      .slider-item img {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .slider-caption {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .slider-caption h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .slider-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .slider-prev, .slider-next {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: white;
+        border: 1px solid var(--border-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .slider-prev:hover, .slider-next:hover {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .slider-dots {
+        display: flex;
+        gap: 10px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--border-color);
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .dot.active {
+        background-color: var(--primary-color);
+      }
+
+      /* Planos */
+      .pricing {
+        padding: 80px 0;
+      }
+
+      .pricing-cards {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 50px;
+      }
+
+      .pricing-card {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        padding: 40px 30px;
+        max-width: 350px;
+        width: 100%;
+        position: relative;
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .pricing-card.featured {
+        transform: scale(1.05);
+        border: 2px solid var(--primary-color);
+      }
+
+      .pricing-badge {
+        position: absolute;
+        top: -12px;
+        right: 20px;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .pricing-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .pricing-header h3 {
+        font-size: 28px;
+        margin-bottom: 15px;
+      }
+
+      .price {
+        font-size: 48px;
+        font-weight: 700;
+        color: var(--primary-color);
+      }
+
+      .price span {
+        font-size: 18px;
+        font-weight: 400;
+        color: var(--gray-color);
+      }
+
+      .subtitle {
+        margin-top: 10px;
+        color: var(--gray-color);
+      }
+
+      .pricing-features {
+        margin-bottom: 30px;
+      }
+
+      .pricing-features ul {
+        list-style: none;
+      }
+
+      .pricing-features li {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+      }
+
+      .pricing-features li:last-child {
+        margin-bottom: 0;
+      }
+
+      .pricing-features i {
+        margin-right: 10px;
+        color: var(--success-color);
+      }
+
+      .pricing-features i.fa-times {
+        color: var(--danger-color);
+      }
+
+      .pricing-cta {
+        margin-top: 30px;
+      }
+
+      /* Comparativo */
+      .comparison {
+        padding: 80px 0;
+        background-color: var(--background-light);
+      }
+
+      .table-responsive {
+        overflow-x: auto;
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 40px;
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        padding: 15px 20px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .comparison-table th {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .comparison-table th:first-child,
+      .comparison-table td:first-child {
+        font-weight: 500;
+      }
+
+      .comparison-table i.fa-check {
+        color: var(--success-color);
+      }
+
+      .comparison-table i.fa-times {
+        color: var(--danger-color);
+      }
+
+      /* Footer */
+      footer {
+        background-color: var(--dark-color);
+        color: white;
+        padding: 60px 0 30px;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 40px;
+        margin-bottom: 50px;
+      }
+
+      .footer-logo {
+        display: flex;
+        align-items: center;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 15px;
+      }
+
+      .footer-col p {
+        margin-bottom: 20px;
+        color: var(--gray-color);
+      }
+
+      .footer-col h4 {
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+
+      .footer-col ul {
+        list-style: none;
+      }
+
+      .footer-col li {
+        margin-bottom: 12px;
+      }
+
+      .footer-col a {
+        color: var(--gray-color);
+        transition: color 0.3s;
+      }
+
+      .footer-col a:hover {
+        color: white;
+      }
+
+      .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--gray-color);
+        font-size: 14px;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
+
+      .footer-links a {
+        color: var(--gray-color);
+        transition: color 0.3s;
+      }
+
+      .footer-links a:hover {
+        color: white;
+      }
+
+      /* Responsividade */
+      @media (max-width: 768px) {
+        .hero .container {
+          flex-direction: column;
+        }
+
+        .hero h1 {
+          font-size: 36px;
+        }
+
+        .hamburger {
+          display: flex;
+        }
+
+        .nav-links {
+          position: fixed;
+          top: 70px;
+          left: 0;
+          right: 0;
+          flex-direction: column;
+          background-color: white;
+          padding: 20px;
+          box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+          transform: translateY(-150%);
+          transition: transform 0.3s ease;
+          z-index: 99;
+        }
+
+        .nav-links.active {
+          transform: translateY(0);
+        }
+
+        .footer-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .pricing-cards {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .pricing-card.featured {
+          transform: scale(1);
+        }
+
+        .footer-bottom {
+          flex-direction: column;
+          gap: 20px;
+          text-align: center;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .footer-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-buttons {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Página estática enquanto o React carrega -->
+      <header>
+        <nav class="navbar">
+          <div class="container">
+            <div class="logo">
+              <img src="/logo-cronoproject.png" alt="CronoProject Logo" class="logo-img" />
+              <span>CronoProject</span>
+            </div>
+            <ul class="nav-links">
+              <li><a href="#recursos">Recursos</a></li>
+              <li><a href="#planos">Planos</a></li>
+              <li><a href="#contato">Contato</a></li>
+              <li><a href="/login" class="btn btn-outline">Entrar</a></li>
+              <li><a href="/signup" class="btn btn-primary">Cadastrar</a></li>
+            </ul>
+            <div class="hamburger">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div class="container">
+          <div class="hero-content">
+            <h1>Gerencie seus cronogramas com eficiência</h1>
+            <p>Planejamento, WBS e gráficos de Gantt integrados em uma plataforma intuitiva</p>
+            <div class="hero-buttons">
+              <a href="/signup" class="btn btn-primary btn-lg">Comece Grátis</a>
+              <a href="#demo" class="btn btn-outline btn-lg">Ver Demo</a>
+            </div>
+          </div>
+          <div class="hero-image">
+            <img src="/cronoproject-dashboard.png" alt="Dashboard CronoProject" />
+          </div>
+        </div>
+      </section>
+
+      <section id="exemplos" class="examples">
+        <div class="container">
+          <h2 class="section-title">Exemplos de Uso</h2>
+          <p class="section-subtitle">Veja como o CronoProject transforma o gerenciamento de projetos</p>
+          
+          <div class="examples-slider">
+            <div class="slider-container">
+              <div class="slider-item">
+                <img src="/exemplo-gantt.png" alt="Exemplo de Gráfico de Gantt" />
+                <div class="slider-caption">
+                  <h3>Gráfico de Gantt</h3>
+                  <p>Visualize o cronograma completo com dependências e caminho crítico</p>
+                </div>
+              </div>
+            </div>
+            <div class="slider-controls">
+              <button class="slider-prev"><i class="fas fa-chevron-left"></i></button>
+              <div class="slider-dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+              <button class="slider-next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Seção de Planos -->
+      <section id="planos" class="pricing">
+        <div class="container">
+          <h2 class="section-title">Nossos Planos</h2>
+          <p class="section-subtitle">Escolha o plano ideal para suas necessidades</p>
+          
+          <div class="pricing-cards">
+            <div class="pricing-card">
+              <div class="pricing-header">
+                <h3>Free</h3>
+                <p class="price">R$ 0<span>/mês</span></p>
+                <p class="subtitle">Para pequenos times e projetos simples</p>
+              </div>
+              <div class="pricing-features">
+                <ul>
+                  <li><i class="fas fa-check"></i> Máximo de 3 projetos ativos</li>
+                  <li><i class="fas fa-check"></i> Até 5 usuários por projeto</li>
+                  <li><i class="fas fa-check"></i> 100MB de armazenamento por usuário</li>
+                  <li><i class="fas fa-check"></i> Recursos básicos de cronograma</li>
+                  <li><i class="fas fa-check"></i> WBS básico</li>
+                  <li><i class="fas fa-times"></i> Gráfico de Gantt sem edição avançada</li>
+                </ul>
+              </div>
+              <div class="pricing-cta">
+                <a href="/signup?plan=free" class="btn btn-outline btn-block">Começar Grátis</a>
+              </div>
+            </div>
+            
+            <div class="pricing-card featured">
+              <div class="pricing-badge">Popular</div>
+              <div class="pricing-header">
+                <h3>Premium</h3>
+                <p class="price">R$ 49<span>/mês</span></p>
+                <p class="subtitle">Para equipes e projetos complexos</p>
+              </div>
+              <div class="pricing-features">
+                <ul>
+                  <li><i class="fas fa-check"></i> Projetos ilimitados</li>
+                  <li><i class="fas fa-check"></i> Usuários ilimitados por projeto</li>
+                  <li><i class="fas fa-check"></i> 5GB de armazenamento por usuário</li>
+                  <li><i class="fas fa-check"></i> Personalização avançada do Gantt</li>
+                  <li><i class="fas fa-check"></i> Integrações (Google Drive, Trello, Jira)</li>
+                  <li><i class="fas fa-check"></i> Relatórios e dashboards avançados</li>
+                  <li><i class="fas fa-check"></i> Suporte prioritário</li>
+                </ul>
+              </div>
+              <div class="pricing-cta">
+                <a href="/signup?plan=premium" class="btn btn-primary btn-block">Teste Grátis por 14 dias</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Seção de Comparação de Planos -->
+      <section id="comparativo" class="comparison">
+        <div class="container">
+          <h2 class="section-title">Comparativo de Planos</h2>
+          <div class="table-responsive">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>Recursos</th>
+                  <th>Free</th>
+                  <th>Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Projetos</td>
+                  <td>3 máximo</td>
+                  <td>Ilimitado</td>
+                </tr>
+                <tr>
+                  <td>Usuários por projeto</td>
+                  <td>5 máximo</td>
+                  <td>Ilimitado</td>
+                </tr>
+                <tr>
+                  <td>Armazenamento</td>
+                  <td>100MB por usuário</td>
+                  <td>5GB por usuário</td>
+                </tr>
+                <tr>
+                  <td>Gráfico de Gantt avançado</td>
+                  <td><i class="fas fa-times"></i></td>
+                  <td><i class="fas fa-check"></i></td>
+                </tr>
+                <tr>
+                  <td>Integrações</td>
+                  <td><i class="fas fa-times"></i></td>
+                  <td><i class="fas fa-check"></i></td>
+                </tr>
+                <tr>
+                  <td>Relatórios avançados</td>
+                  <td><i class="fas fa-times"></i></td>
+                  <td><i class="fas fa-check"></i></td>
+                </tr>
+                <tr>
+                  <td>Suporte prioritário</td>
+                  <td><i class="fas fa-times"></i></td>
+                  <td><i class="fas fa-check"></i></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="container">
+          <div class="footer-grid">
+            <div class="footer-col">
+              <div class="footer-logo">
+                <img src="/logo-cronoproject-white.png" alt="CronoProject Logo" class="logo-img-small" />
+                <span>CronoProject</span>
+              </div>
+              <p>Solução completa para gerenciamento de cronogramas de projetos.</p>
+            </div>
+            <div class="footer-col">
+              <h4>Produto</h4>
+              <ul>
+                <li><a href="#recursos">Recursos</a></li>
+                <li><a href="#planos">Planos e Preços</a></li>
+                <li><a href="/roadmap">Roadmap</a></li>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4>Empresa</h4>
+              <ul>
+                <li><a href="/sobre">Sobre nós</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/cases">Casos de Sucesso</a></li>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4>Suporte</h4>
+              <ul>
+                <li><a href="/ajuda">Central de Ajuda</a></li>
+                <li><a href="/contato">Contato</a></li>
+                <li><a href="/status">Status</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <p>&copy; 2023 CronoProject. Todos os direitos reservados.</p>
+            <div class="footer-links">
+              <a href="/termos">Termos de Uso</a>
+              <a href="/privacidade">Política de Privacidade</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <script>
+        // Script para funcionalidade de menu hamburger
+        document.addEventListener('DOMContentLoaded', function() {
+          const hamburger = document.querySelector('.hamburger');
+          const navLinks = document.querySelector('.nav-links');
+          
+          if (hamburger) {
+            hamburger.addEventListener('click', function() {
+              navLinks.classList.toggle('active');
+            });
+          }
+          
+          // Slider
+          let currentSlide = 0;
+          const dots = document.querySelectorAll('.dot');
+          const sliderItems = document.querySelectorAll('.slider-item');
+          const prevBtn = document.querySelector('.slider-prev');
+          const nextBtn = document.querySelector('.slider-next');
+          
+          function showSlide(n) {
+            currentSlide = n;
+            
+            if (sliderItems.length > 0) {
+              const sliderContainer = document.querySelector('.slider-container');
+              sliderContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+              
+              dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+              });
+            }
+          }
+          
+          if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+              let newSlide = currentSlide - 1;
+              if (newSlide < 0) newSlide = sliderItems.length - 1;
+              showSlide(newSlide);
+            });
+          }
+          
+          if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+              let newSlide = currentSlide + 1;
+              if (newSlide >= sliderItems.length) newSlide = 0;
+              showSlide(newSlide);
+            });
+          }
+          
+          dots.forEach((dot, index) => {
+            dot.addEventListener('click', function() {
+              showSlide(index);
+            });
+          });
+          
+          // Auto slider
+          setInterval(function() {
+            if (nextBtn) nextBtn.click();
+          }, 5000);
+        });
+      </script>
+    </div>
+    
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
