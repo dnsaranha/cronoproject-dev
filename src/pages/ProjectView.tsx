@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button"; // Adicione esta importação
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectMembers } from "@/components/ProjectMembers";
 import LoadingState from "@/components/LoadingState";
@@ -31,54 +32,75 @@ export default function ProjectView() {
   const { pathname } = location;
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null); // Novo estado para erro
   const [isOwnerOrAdmin, setIsOwnerOrAdmin] = useState(false);
   const [hasEditPermission, setHasEditPermission] = useState(false);
   const [ownerProfile, setOwnerProfile] = useState<ProfileInfo | null>(null);
   const { tasks, batchUpdateTasks } = useTasks();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   useEffect(() => {
     if (projectId) {
       loadProject();
       checkPermissions();
+    } else {
+      setError("ID do projeto não encontrado");
     }
   }, [projectId]);
 
   async function loadProject() {
     try {
-      if (!projectId) return;
-      
+      setLoading(true);
+      setError(null);
+
+      if (!projectId) {
+        setError("ID do projeto não especificado");
+        return;
+      }
+
+      // Primeiro, verifica se o usuário está autenticado
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setError("Usuário não autenticado");
+        navigate('/auth');
+        return;
+      }
+
       const { data: projectData, error } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .single();
-        
-      if (error) throw error;
-      
+
+      if (error) {
+        setError(`Erro ao carregar o projeto: ${error.message}`);
+        return;
+      }
+
+      if (!projectData) {
+        setError("Projeto não encontrado");
+        return;
+      }
+
       setProject(projectData);
-      
-      // Load owner profile information
+
+      // Carrega informações do proprietário
       if (projectData.owner_id) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, full_name, email')
           .eq('id', projectData.owner_id)
           .single();
-          
+
         if (!profileError && profileData) {
           setOwnerProfile(profileData);
         }
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      setError(`Erro ao carregar o projeto: ${errorMessage}`);
       console.error('Erro ao carregar projeto:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o projeto. Verifique sua conexão e tente novamente.",
-        variant: "destructive",
-      });
-      navigate('/');
     } finally {
       setLoading(false);
     }
@@ -160,11 +182,39 @@ export default function ProjectView() {
   };
 
   if (loading) {
-    return <LoadingState />;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <LoadingState />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-4">
+        <div className="text-red-500 text-center mb-4">{error}</div>
+        <Button 
+          onClick={() => {
+            setError(null);
+            navigate('/');
+          }}
+          className="bg-primary hover:bg-primary-dark"
+        >
+          Voltar para a página inicial
+        </Button>
+      </div>
+    );
   }
 
   if (!project) {
-    return <div>Projeto não encontrado</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-4">
+        <div className="text-center mb-4">Projeto não encontrado</div>
+        <Button onClick={() => navigate('/')} className="bg-primary hover:bg-primary-dark">
+          Voltar para a página inicial
+        </Button>
+      </div>
+    );
   }
 
   const formattedDate = project.created_at 
