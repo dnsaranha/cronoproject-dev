@@ -71,7 +71,7 @@ export default function ProjectView() {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.user) {
         setError("Usuário não autenticado");
-        navigate('/login');
+        navigate('/auth');
         return;
       }
 
@@ -121,7 +121,7 @@ export default function ProjectView() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        navigate('/login');
+        navigate('/auth');
         return;
       }
       
