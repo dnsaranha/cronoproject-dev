@@ -42,11 +42,6 @@ export default function ProjectView() {
   const { toast } = useToast();
 
   useEffect(() => {
-  if (projectId && pathname === `/project/${projectId}`) {
-    navigate(`/project/${projectId}/gantt`);
-  }
-  }, [pathname, projectId]);
-  useEffect(() => {
     if (projectId) {
       setLoading(true);
       setSubViewLoading(true);
