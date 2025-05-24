@@ -246,7 +246,7 @@
           const hamburger = document.querySelector('.hamburger');
           const navLinks = document.querySelector('.nav-links');
           
-          if (hamburger) {
+          if (hamburger && navLinks) {
             hamburger.addEventListener('click', function() {
               navLinks.classList.toggle('active');
             });
@@ -260,19 +260,23 @@
           const nextBtn = document.querySelector('.slider-next');
           
           function showSlide(n) {
-            currentSlide = n;
+            if (!sliderItems || sliderItems.length === 0) return;
             
-            if (sliderItems.length > 0) {
-              const sliderContainer = document.querySelector('.slider-container');
+            currentSlide = n;
+            const sliderContainer = document.querySelector('.slider-container');
+            
+            if (sliderContainer) {
               sliderContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
               
-              dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlide);
-              });
+              if (dots && dots.length > 0) {
+                dots.forEach((dot, index) => {
+                  dot.classList.toggle('active', index === currentSlide);
+                });
+              }
             }
           }
           
-          if (prevBtn) {
+          if (prevBtn && sliderItems && sliderItems.length > 0) {
             prevBtn.addEventListener('click', function() {
               let newSlide = currentSlide - 1;
               if (newSlide < 0) newSlide = sliderItems.length - 1;
@@ -280,7 +284,7 @@
             });
           }
           
-          if (nextBtn) {
+          if (nextBtn && sliderItems && sliderItems.length > 0) {
             nextBtn.addEventListener('click', function() {
               let newSlide = currentSlide + 1;
               if (newSlide >= sliderItems.length) newSlide = 0;
@@ -288,16 +292,20 @@
             });
           }
           
-          dots.forEach((dot, index) => {
-            dot.addEventListener('click', function() {
-              showSlide(index);
+          if (dots && dots.length > 0) {
+            dots.forEach((dot, index) => {
+              dot.addEventListener('click', function() {
+                showSlide(index);
+              });
             });
-          });
+          }
           
-          // Auto slider
-          setInterval(function() {
-            if (nextBtn) nextBtn.click();
-          }, 5000);
+          // Auto slider - only if elements exist
+          if (nextBtn && sliderItems && sliderItems.length > 0) {
+            setInterval(function() {
+              nextBtn.click();
+            }, 5000);
+          }
         });
       </script>
     </div>
