@@ -42,144 +42,146 @@ export default function ProjectView() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (projectId) {
-      setLoading(true);
-      setSubViewLoading(true);
-      Promise.all([
-        loadProject(),
-        checkPermissions()
-      ]).finally(() => {
-        setLoading(false);
-        setSubViewLoading(false);
-      });
-    } else {
-    setError("ID do projeto não encontrado");
+  // Redireciona para a visualização Gantt se estiver na rota raiz do projeto
+  if (projectId && location.pathname === `/project/${projectId}`) {
+    navigate(`/project/${projectId}/gantt`);
   }
-}, [projectId]);
+}, [projectId, location.pathname, navigate]);
 
   async function loadProject() {
-    try {
-      setLoading(true);
-      setError(null);
+  try {
+    setLoading(true);
+    setError(null);
 
-      if (!projectId) {
-        setError("ID do projeto não especificado");
-        return;
-      }
+    if (!projectId) {
+      setError("ID do projeto não especificado");
+      return;
+    }
 
-      // Primeiro, verifica se o usuário está autenticado
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.user) {
-        setError("Usuário não autenticado");
-        navigate('/login');
-        return;
-      }
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setError("Usuário não autenticado");
+      navigate('/login');
+      return;
+    }
 
-      const { data: projectData, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
+    const { data: projectData, error } = await supabase
+      .from('projects')
+      .select('*, owner:profiles!projects_owner_id_fkey (id, full_name, email)')
+      .eq('id', projectId)
+      .single();
 
-      if (error) {
-        setError(`Erro ao carregar o projeto: ${error.message}`);
-        return;
-      }
-
-      if (!projectData) {
+    if (error) {
+      if (error.code === 'PGRST116') {
         setError("Projeto não encontrado");
         return;
       }
-
-      setProject(projectData);
-
-      // Carrega informações do proprietário
-      if (projectData.owner_id) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, full_name, email')
-          .eq('id', projectData.owner_id)
-          .single();
-
-        if (!profileError && profileData) {
-          setOwnerProfile(profileData);
-        }
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      setError(`Erro ao carregar o projeto: ${errorMessage}`);
-      console.error('Erro ao carregar projeto:', error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
+
+    setProject(projectData);
+    
+    // Atualiza informações do proprietário
+    if (projectData.owner) {
+      setOwnerProfile(projectData.owner);
+    }
+    
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    setError(`Erro ao carregar o projeto: ${errorMessage}`);
+    console.error('Erro ao carregar projeto:', error);
+  } finally {
+    setLoading(false);
   }
+}
   
   async function checkPermissions() {
-    try {
-      if (!projectId) return;
+  try {
+    if (!projectId) return;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      // Se não estiver autenticado, redireciona para login
+      navigate('/login');
+      return;
+    }
+    
+    // Verifica se o usuário é proprietário
+    const { data: projectData, error: projectError } = await supabase
+      .from('projects')
+      .select('owner_id')
+      .eq('id', projectId)
+      .single();
       
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate('/login');
+    if (projectError) {
+      if (projectError.code === 'PGRST116') {
+        // Projeto não encontrado
+        toast({
+          title: "Projeto não encontrado",
+          description: "O projeto que você está tentando acessar não existe.",
+          variant: "destructive",
+        });
+        navigate('/dashboard');
         return;
       }
+      throw projectError;
+    }
+    
+    if (projectData.owner_id === user.id) {
+      setIsOwnerOrAdmin(true);
+      setHasEditPermission(true);
+      return;
+    }
+    
+    // Verifica se o usuário é membro do projeto
+    const { data: memberData, error: memberError } = await supabase
+      .from('project_members')
+      .select('role')
+      .eq('project_id', projectId)
+      .eq('user_id', user.id)
+      .single();
       
-      // Check if user is owner
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('owner_id')
-        .eq('id', projectId)
-        .single();
-        
-      if (projectError) throw projectError;
-      
-      if (projectData.owner_id === user.id) {
-        setIsOwnerOrAdmin(true);
-        setHasEditPermission(true);
-        return;
+    if (memberError) {
+      if (memberError.code !== 'PGRST116') {
+        throw memberError;
       }
       
-      // Check if user is admin
-      const { data: memberData, error: memberError } = await supabase
+      // Se não é membro, verifica se tem qualquer acesso ao projeto
+      const { data: anyMember, error: anyMemberError } = await supabase
         .from('project_members')
-        .select('role')
+        .select('id')
         .eq('project_id', projectId)
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id);
         
-      if (memberError && memberError.code !== 'PGRST116') {
-        // Check if user has any access to project
-        const { data: anyMember, error: anyMemberError } = await supabase
-          .from('project_members')
-          .select('id')
-          .eq('project_id', projectId)
-          .eq('user_id', user.id);
-          
-        if (anyMemberError || !anyMember || anyMember.length === 0) {
-          // User has no access to this project
-          toast({
-            title: "Acesso negado",
-            description: "Você não tem permissão para acessar este projeto.",
-            variant: "destructive",
-          });
-          navigate('/');
-          return;
-        }
+      if (anyMemberError || !anyMember || anyMember.length === 0) {
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para acessar este projeto.",
+          variant: "destructive",
+        });
+        navigate('/dashboard');
+        return;
       }
-      
-      setIsOwnerOrAdmin(memberData?.role === 'admin');
-      setHasEditPermission(memberData?.role === 'admin' || memberData?.role === 'editor');
-    } catch (error) {
-      console.error('Erro ao verificar permissões:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível verificar suas permissões. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-      navigate('/');
+    }
+    
+    // Configura as permissões do usuário
+    setIsOwnerOrAdmin(memberData?.role === 'admin');
+    setHasEditPermission(memberData?.role === 'admin' || memberData?.role === 'editor');
+    
+  } catch (error) {
+    console.error('Erro ao verificar permissões:', error);
+    toast({
+      title: "Erro",
+      description: "Não foi possível verificar suas permissões. Tente novamente mais tarde.",
+      variant: "destructive",
+    });
+    // Apenas redireciona para o dashboard em caso de erro real
+    if (error instanceof Error) {
+      navigate('/dashboard');
     }
   }
+}
   
   // Handle the import of Excel data
   const handleExcelImport = async (
