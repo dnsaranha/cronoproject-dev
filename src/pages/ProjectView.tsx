@@ -38,16 +38,29 @@ export default function ProjectView() {
   const [ownerProfile, setOwnerProfile] = useState<ProfileInfo | null>(null);
   const { tasks, batchUpdateTasks } = useTasks();
   const navigate = useNavigate();
+  const [subViewLoading, setSubViewLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
+  if (projectId && pathname === `/project/${projectId}`) {
+    navigate(`/project/${projectId}/gantt`);
+  }
+  }, [pathname, projectId]);
+  useEffect(() => {
     if (projectId) {
-      loadProject();
-      checkPermissions();
+      setLoading(true);
+      setSubViewLoading(true);
+      Promise.all([
+        loadProject(),
+        checkPermissions()
+      ]).finally(() => {
+        setLoading(false);
+        setSubViewLoading(false);
+      });
     } else {
-      setError("ID do projeto não encontrado");
-    }
-  }, [projectId]);
+    setError("ID do projeto não encontrado");
+  }
+}, [projectId]);
 
   async function loadProject() {
     try {
@@ -63,7 +76,7 @@ export default function ProjectView() {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.user) {
         setError("Usuário não autenticado");
-        navigate('/auth');
+        navigate('/login');
         return;
       }
 
@@ -113,7 +126,7 @@ export default function ProjectView() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        navigate('/auth');
+        navigate('/login');
         return;
       }
       
@@ -284,7 +297,13 @@ export default function ProjectView() {
         </div>
       </div>
       <div className="flex-1 overflow-auto">
+      {subViewLoading ? (
+        <div className="flex items-center justify-center h-full">
+          <LoadingState />
+        </div>
+        ) : (
         <Outlet />
+        )}
       </div>
     </div>
   );
