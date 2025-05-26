@@ -42,7 +42,7 @@ export default function ProjectView() {
 
   useEffect(() => {
     if (projectId && location.pathname === `/project/${projectId}`) {
-      navigate(`/project/${projectId}/gantt`);
+    // navigate(`/project/${projectId}/gantt`);
     }
   }, [projectId, location.pathname, navigate]);
 
